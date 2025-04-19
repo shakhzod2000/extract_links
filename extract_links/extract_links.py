@@ -74,7 +74,7 @@ def check_link_status(url):
         return f"Error: Unexpected ({type(e).__name__})"
 
 def stream_links(start_url, max_depth=3, delay=1):
-    processed_or_queued = set()
+    visited = set()
     queue = [(start_url, 0)] # (URL, depth)
 
     parsed_start_url = urlparse(start_url)
@@ -89,24 +89,22 @@ def stream_links(start_url, max_depth=3, delay=1):
     # Check and yield the starting URL
     start_status = check_link_status(start_url)
     start_data = json.dumps({'url': start_url, 'status': start_status})
-    processed_or_queued.add(start_url)
+    visited.add(start_url)
     yield f"data: {start_data}\n\n"
 
     while queue:
         url, depth = queue.pop(0)
 
-        new_links = get_html_links(url, processed_or_queued, base_domain)
-
-        # if url.endswith('.xml'):
-        #     new_links = get_xml_links(url)
-        # else:
-        #     new_links = get_html_links(url, processed_or_queued, base_domain)
+        if url.endswith('.xml'):
+            new_links = get_xml_links(url)
+        else:
+            new_links = get_html_links(url, visited, base_domain)
 
         # Add new links to queue
         if depth < max_depth:
             for link in new_links:
-                if link not in processed_or_queued:
-                    processed_or_queued.add(link) # Mark as found
+                if link not in visited:
+                    visited.add(link) # Mark as found
                     link_status = check_link_status(link)
                     link_data = json.dumps({'url': link, 'status': link_status})
                     yield f"data: {link_data}\n\n" #SSE format
@@ -118,7 +116,7 @@ def stream_links(start_url, max_depth=3, delay=1):
                     time.sleep(0.05) # Small delay after yield to allow SSE processing buffer
 
         time.sleep(delay) # Delay to avoid overwhelming server
-    end_data = json.dumps({'status': 'finished', 'count': len(processed_or_queued)})
+    end_data = json.dumps({'status': 'finished', 'count': len(visited)})
     yield f"event: end\ndata: {end_data}.\n\n"
 
 
