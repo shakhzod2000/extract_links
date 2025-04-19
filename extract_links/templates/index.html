@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Link Crawler</title>
+    <style>
+        body {font-family: sans-serif; padding: 20px; }
+        /* Styles for the input form */
+        #crawl-form { margin-bottom: 20px; display: flex; align-items: center; gap: 10px;}
+        #url-input { flex-grow: 1; padding: 8px; font-size: 1em; }
+        #start-button { padding: 8px 15px; font-size: 1em; cursor: pointer; }
+        /* End Form Styles */
+        #link-list { list-style: none; padding-left: 0; margin-bottom: 1em; }
+        li { margin-bottom: 5px; word-break: break-all; line-height: 1.4;}
+        li span { /* Style for the status code */
+            display: inline-block;
+            min-width: 90px; /* Ensure alignment */
+            padding: 2px 6px;
+            margin-right: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9em;
+            text-align: center;
+            color: white;
+        }
+        /* Status colors */
+        .status-ok { background-color: #28a745; } /* Green for 2xx */
+        .status-redirect { background-color: #007bff; } /* Blue for 3xx */
+        .status-client-error { background-color: #ffc107; color: #333 !important; } /* Yellow for 4xx */
+        .status-server-error { background-color: #dc3545; } /* Red for 5xx */
+        .status-error { background-color: #6c757d; } /* Gray for other errors */
+
+        progress { width: 100%; margin-bottom: 1em; height: 20px; }
+        #status { margin-top: 1em; margin-bottom: 0.5em; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Live Link Crawler</h1>
+
+    <form id="crawl-form">
+        <input type="url" id="url-input" placeholder="Enter website URL (e.g., https://example.com)" required>
+        <button type="submit" id="start-button">Start Check</button>
+    </form>
+
+    <div id="status">Enter a URL and click "Start Check".</div>
+
+    <progress id="progress" value="0" max="200" ></progress>
+
+    <ul id="link-list"></ul>
+
+    <script>
+        const form = document.getElementById('crawl-form');
+        const urlInput = document.getElementById('url-input');
+        const startButton = document.getElementById('start-button');
+        const linkList = document.getElementById('link-list');
+        const progressBar = document.getElementById('progress');
+        const statusDiv = document.getElementById('status');
+        const seenLinks = new Set();
+
+        let eventSource = null; // Keep track of the current EventSource connection
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+            const urlToCrawl = urlInput.value.trim();
+
+            if (!urlToCrawl) {
+                statusDiv.textContent = "Please enter a valid URL.";
+                return;
+            }
+
+            // Close existing connection if any
+            if (eventSource) {
+                console.log("Closing previous EventSource connection.");
+                eventSource.close();
+                seenLinks.clear(); // Clear tracked links for new crawl
+            }
+
+            // Clear previous results
+            linkList.innerHTML = ''; // Clear the list
+            progressBar.value = 0;
+            progressBar.style.display = 'none';
+            statusDiv.textContent = `Connecting to crawl ${urlToCrawl}...`;
+            startButton.disabled = true;
+
+            // Start EventSource Connection with new URL
+            console.log(`Starting new EventSource for: ${urlToCrawl}`);
+            // Encode the URL to safely pass it as a query parameter
+            const encodedUrl = encodeURIComponent(urlToCrawl);
+            eventSource = new EventSource(`/stream?url=${encodedUrl}`);
+
+            setupEventSourceListeners(); // Re-attach listeners to the new connection
+        });
+
+        function setupEventSourceListeners() {
+            const progressBarMax = progressBar.max;
+
+            eventSource.onopen = function() {
+                console.log("Connection to stream opened.");
+                statusDiv.textContent = "Crawling in progress...";
+                progressBar.style.display = 'block'; // Show progress bar
+            };
+    
+            eventSource.onerror = function(err) {
+                console.error("EventSource failed:", err);
+                statusDiv.textContent = "Error connecting to crawl stream. Check URL or server.";
+                progressBar.style.display = 'none'; // Hide progress on error
+                startButton.disabled = false; // Re-enable startButton
+                if (eventSource) eventSource.close(); // Close on error
+            };
+
+            eventSource.onmessage = function (event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    const url = data.url;
+                    const status = data.status;
+    
+                    if (url && !seenLinks.has(url)) {
+                        seenLinks.add(url);
+            
+                        const li = document.createElement('li');
+                        const statusSpan = document.createElement('span');
+                        const a = document.createElement('a');
+    
+                        statusSpan.textContent = status;
+                        if (typeof status === 'number') {
+                            if (status >= 200 && status < 300) statusSpan.className = 'status-ok';
+                            else if (status >= 300 && status < 400) statusSpan.className = 'status-redirect';
+                            else if (status >= 400 && status < 500) statusSpan.className = 'status-client-error';
+                            else if (status >= 500 && status < 600) statusSpan.className = 'status-server-error';
+                            else statusSpan.className = 'status-error'; // Unexpected numbers
+                        } else {
+                            statusSpan.className = 'status-error';
+                        }
+                        a.href = url;
+                        a.textContent = url;
+                        a.target = '_blank'; // Open in new tab
+                        a.rel = 'noopener noreferrer'; // for security
+    
+                        li.appendChild(a);
+                        li.appendChild(statusSpan);
+                        linkList.appendChild(li);
+    
+                        // Update progress bar value
+                        progressBar.value = seenLinks.size;
+    
+                        let percentage = Math.min(100, Math.round((seenLinks.size / progressBarMax) * 100));
+                        statusDiv.textContent = `Crawling... Found ${seenLinks.size} unique links (~${percentage}% of estimate).`;
+                    }
+                } catch (e) {
+                    console.error("Error parsing received data:", event.data, e);
+                }
+            };
+
+
+            eventSource.addEventListener("end", function () {
+                try {
+                    const endData = JSON.parse(event.data);
+                    progressBar.value = seenLinks.size;
+                    let finalPercentage = Math.min(100, Math.round((seenLinks.size / progressBarMax) * 100));
+                    // progressBar.style.display = 'none';
+                    statusDiv.textContent = `✅ Crawling finished. Found ${seenLinks.size} unique links (~${finalPercentage}% of estimate).`;
+                    if (seenLinks.size >= progressBarMax) {
+                        progressBar.value = progressBarMax; // Ensure it shows 100% if max was reached/exceeded
+                    }
+                    startButton.disabled = false;
+                    eventSource.close();
+                } catch {
+                    statusDiv.textContent = `✅ Crawl & Check finished, but end data was unclear. Found ${seenLinks.size} links.`;
+                    startButton.disabled = false;
+                    if (eventSource) eventSource.close();
+                }
+            });
+    
+            // Listener for custom 'error' events from backend (optional)
+            eventSource.addEventListener("error", function (event) {
+                try {
+                    const errorData = JSON.parse(event.data);
+                    console.error("Received error event from server:", errorData);
+                    statusDiv.textContent = `Error during crawl: ${errorData.status || 'Unknown error'}`;
+                } catch {
+                    statusDiv.textContent = `Error during crawl: ${event.data || 'Unknown server error'}`;
+                    console.error("Received non-JSON error event:", event.data);
+                }
+                progressBar.style.display = 'none'; // Hide progress on error
+                startButton.disabled = false;
+                if (eventSource) eventSource.close();
+                console.log("EventSource closed due to server error.");
+            });
+
+        }
+
+    </script>
+
+    <style> 
+        ul {margin-bottom: 300px;}
+    </style> 
+</body>
+</html>
