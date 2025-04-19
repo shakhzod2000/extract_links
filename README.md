@@ -61,26 +61,20 @@ A web-based application built with Flask and JavaScript that crawls a given URL,
 
 🧰 Setup
 ```bash
-Copy
-Edit
 git clone https://github.com/shakhzod2000/extract_links.git
 cd extract_links
 ```
 
 ```bash
-Copy
-Edit
 pip install flask requests beautifulsoup4
 ```
 
 ## ▶️ Run the App
 ```bash
-Copy
-Edit
 python app.py
-Then open your browser at:
-http://localhost:5000
 ```
+Then open your browser at: `http://localhost:5000`
+
 
 ## 📸 Screenshots
 ![image](https://github.com/user-attachments/assets/0be870a6-548a-43d5-add3-7f42d4e4070a)
@@ -90,14 +84,16 @@ http://localhost:5000
 > Want to check for broken links on your website before deploying? Just paste the URL, hit Start Check, and instantly see which pages need fixing.
 
 ## 🚧 Limitations
-* Only crawls links within the same domain
+* ❗Only crawls links within the same domain
 
-* Does not parse JavaScript-generated links
+* ❗Does not parse JavaScript-generated links
 
-* Intended for small to medium websites (not optimized for huge sitemaps)
+* ❗Intended for small to medium websites (not optimized for huge sitemaps)
 
 ## 🤝 Contributing
 > Contributions are welcome! Please open issues or submit PRs.
 
-📬 Contact
-For questions or collaboration: 📧 sshermatov@gmail.com
+---
+
+## 📬 Contact
+* For questions or collaboration: 📧 sshermatov50@gmail.com
