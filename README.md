@@ -27,65 +27,77 @@ A web-based application built with Flask and JavaScript that crawls a given URL,
 └── README.md            # You're here!
 ```
 
-🛠️ Technologies Used
-Frontend: HTML5, CSS3, Vanilla JavaScript
+## 🛠️ Technologies Used
 
-Backend: Python, Flask
+* Frontend: HTML5, CSS3, Vanilla JavaScript
 
-Web Parsing: BeautifulSoup, Requests
+* Backend: Python, Flask
 
-Live Updates: Server-Sent Events (SSE)
+* Web Parsing: BeautifulSoup, Requests
 
-🧪 How It Works
-User submits a website URL.
+* Live Updates: Server-Sent Events (SSE)
 
-Flask backend begins crawling and sends back discovered links via SSE.
+---
 
-JavaScript frontend receives links in real-time, checks their status, and displays them with color-coded statuses.
+## 🧪 How It Works
 
-A progress bar tracks the estimated crawl progress.
+* User submits a website URL.
 
-📦 Installation
-🔧 Requirements
-Python 3.7+
+* Flask backend begins crawling and sends back discovered links via SSE.
 
-pip
+* JavaScript frontend receives links in real-time, checks their status, and displays them with color-coded statuses.
+
+* A progress bar tracks the estimated crawl progress.
+
+---
+
+## 📦 Installation
+### 🔧 Requirements
+* Python 3.7+
+
+* pip
+
+---
 
 🧰 Setup
-bash
+```bash
 Copy
 Edit
 git clone https://github.com/shakhzod2000/extract_links.git
 cd extract_links
+```
 
-bash
+```bash
 Copy
 Edit
 pip install flask requests beautifulsoup4
-▶️ Run the App
-bash
+```
+
+## ▶️ Run the App
+```bash
 Copy
 Edit
 python app.py
 Then open your browser at:
 http://localhost:5000
+```
 
-📸 Screenshots
+## 📸 Screenshots
 ![image](https://github.com/user-attachments/assets/0be870a6-548a-43d5-add3-7f42d4e4070a)
 
 
-📋 Example Use Case
-Want to check for broken links on your website before deploying? Just paste the URL, hit Start Check, and instantly see which pages need fixing.
+## 📋 Example Use Case
+> Want to check for broken links on your website before deploying? Just paste the URL, hit Start Check, and instantly see which pages need fixing.
 
-🚧 Limitations
-Only crawls links within the same domain
+## 🚧 Limitations
+* Only crawls links within the same domain
 
-Does not parse JavaScript-generated links
+* Does not parse JavaScript-generated links
 
-Intended for small to medium websites (not optimized for huge sitemaps)
+* Intended for small to medium websites (not optimized for huge sitemaps)
 
-🤝 Contributing
-Contributions are welcome! Please open issues or submit PRs.
+## 🤝 Contributing
+> Contributions are welcome! Please open issues or submit PRs.
 
 📬 Contact
 For questions or collaboration: 📧 sshermatov@gmail.com
