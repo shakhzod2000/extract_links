@@ -1,27 +1,31 @@
-🔗 Live Link Crawler
+# 🔗 Live Link Crawler
+
 A web-based application built with Flask and JavaScript that crawls a given URL, discovers all internal links, and checks their HTTP status codes live using Server-Sent Events (SSE).
 
+---
 
-🚀 Features
-🌐 Crawls a given website and finds all internal hyperlinks
+## 🚀 Features
 
-✅ Checks the status code of each link (e.g., 200 OK, 404 Not Found, etc.)
+* 🌐 Crawls a given website and finds all internal hyperlinks.
+* ✅ Checks the status code of each discovered link (e.g., 200 OK, 404 Not Found, etc.).
+* 📡 Uses SSE (Server-Sent Events) for real-time link updates and status checks.
+* 🎨 Displays link status with clear color-coding (Green for OK, Red for Server Error, Yellow for Client Error, etc.).
+* 🖱️ Allows users to input the target URL directly in the frontend.
+* ⏯️ Provides a Start/Stop button to control the crawling process.
+* 🧠 Smart filtering: ignores irrelevant links like social media domains, image files, JS/CSS files, mailto/tel links.
+* 📊 Includes a live progress bar (based on an estimate) to visualize crawl progress.
 
-📡 Uses SSE (Server-Sent Events) for real-time link updates
+---
 
-🧠 Smart filtering: ignores irrelevant links like social media, images, JS/CSS files, etc.
+## 📂 Project Structure
 
-📊 Includes a live progress bar and visual feedback for crawling progress
-
-📂 Project Structure
-perl
-Copy
-Edit
+```perl
 📁 extract_links/
-├── extract_links.py      # Flask backend (link crawler + SSE stream)
+├── extract_links.py     # Flask backend (link crawler + status checker + SSE stream)
 ├── templates/
-│   └── index.html        # Main frontend interface (JavaScript + HTML + CSS)
-└── README.md             # You're here!
+│   └── index.html       # Main frontend interface (HTML + CSS + JavaScript)
+└── README.md            # You're here!
+
 🛠️ Technologies Used
 Frontend: HTML5, CSS3, Vanilla JavaScript
 
