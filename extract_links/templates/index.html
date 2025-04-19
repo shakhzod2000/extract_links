@@ -39,7 +39,7 @@
     <h1>Live Link Crawler</h1>
 
     <form id="crawl-form">
-        <input type="url" id="url-input" placeholder="Enter website URL (e.g., https://example.com)" required>
+        <input type="text" id="url-input" placeholder="Enter website URL (e.g., https://example.com)" required>
         <button type="submit" id="start-button">Start Check</button>
     </form>
 
@@ -59,11 +59,25 @@
         const seenLinks = new Set();
 
         let eventSource = null; // Keep track of the current EventSource connection
+        let isCrawling = false;
 
         form.addEventListener('submit', function(event) {
             event.preventDefault(); // Prevent default form submission
-            const urlToCrawl = urlInput.value.trim();
 
+            if (isCrawling) {
+                console.log('Stop button clicked');
+                if (eventSource) {
+                    eventSource.close() // Close the connection
+                    console.log('EventSource connection was closed by user');
+                }
+                statusDiv.textContent = 'Crawl stopped by user';
+                isCrawling = false;
+                startButton.textContent = 'Start Check';
+                startButton.disabled = false;
+                return;
+            }
+
+            const urlToCrawl = urlInput.value.trim();
             if (!urlToCrawl) {
                 statusDiv.textContent = "Please enter a valid URL.";
                 return;
@@ -81,7 +95,11 @@
             progressBar.value = 0;
             progressBar.style.display = 'none';
             statusDiv.textContent = `Connecting to crawl ${urlToCrawl}...`;
-            startButton.disabled = true;
+
+            // Update Crawl state and button for starting
+            isCrawling = true;
+            startButton.textContent = 'Stop'
+            startButton.disabled = false;
 
             // Start EventSource Connection with new URL
             console.log(`Starting new EventSource for: ${urlToCrawl}`);
@@ -97,19 +115,27 @@
 
             eventSource.onopen = function() {
                 console.log("Connection to stream opened.");
+                if (!isCrawling) return;
                 statusDiv.textContent = "Crawling in progress...";
                 progressBar.style.display = 'block'; // Show progress bar
+                startButton.textContent = 'Stop';
+                startButton.disabled = false;
             };
     
             eventSource.onerror = function(err) {
-                console.error("EventSource failed:", err);
-                statusDiv.textContent = "Error connecting to crawl stream. Check URL or server.";
-                progressBar.style.display = 'none'; // Hide progress on error
-                startButton.disabled = false; // Re-enable startButton
-                if (eventSource) eventSource.close(); // Close on error
+                if (isCrawling){
+                    console.error("EventSource failed:", err);
+                    statusDiv.textContent = "Error connecting to crawl stream. Check URL or server.";
+                    progressBar.style.display = 'none'; // Hide progress on error
+                    startButton.textContent = 'Start Check';
+                    startButton.disabled = false; // Re-enable startButton
+                    isCrawling = false;
+                    if (eventSource) eventSource.close(); // Close on error
+                }
             };
 
             eventSource.onmessage = function (event) {
+                if (!isCrawling) return;
                 try {
                     const data = JSON.parse(event.data);
                     const url = data.url;
@@ -137,8 +163,8 @@
                         a.target = '_blank'; // Open in new tab
                         a.rel = 'noopener noreferrer'; // for security
     
-                        li.appendChild(a);
                         li.appendChild(statusSpan);
+                        li.appendChild(a);
                         linkList.appendChild(li);
     
                         // Update progress bar value
@@ -153,27 +179,31 @@
             };
 
 
-            eventSource.addEventListener("end", function () {
+            eventSource.addEventListener("end", function (event) {
+                if (!isCrawling) return;
                 try {
                     const endData = JSON.parse(event.data);
-                    progressBar.value = seenLinks.size;
+                    progressBar.value = progressBar.max; // Ensure it shows 100% if max was reached/exceeded
                     let finalPercentage = Math.min(100, Math.round((seenLinks.size / progressBarMax) * 100));
-                    // progressBar.style.display = 'none';
                     statusDiv.textContent = `✅ Crawling finished. Found ${seenLinks.size} unique links (~${finalPercentage}% of estimate).`;
-                    if (seenLinks.size >= progressBarMax) {
-                        progressBar.value = progressBarMax; // Ensure it shows 100% if max was reached/exceeded
-                    }
+                    startButton.textContent = 'Start Check';
                     startButton.disabled = false;
+                    isCrawling = false;
                     eventSource.close();
+                    console.log("EventSource closed.");
                 } catch {
-                    statusDiv.textContent = `✅ Crawl & Check finished, but end data was unclear. Found ${seenLinks.size} links.`;
+                    statusDiv.textContent = `✅ Crawl & Check finished, (data parse error). Found ${seenLinks.size} links.`;
+                    progressBar.value = progressBar.max;
+                    startButton.textContent = 'Start Check';
                     startButton.disabled = false;
+                    isCrawling = false;
                     if (eventSource) eventSource.close();
                 }
             });
     
             // Listener for custom 'error' events from backend (optional)
             eventSource.addEventListener("error", function (event) {
+                if (!isCrawling) return;
                 try {
                     const errorData = JSON.parse(event.data);
                     console.error("Received error event from server:", errorData);
@@ -182,8 +212,9 @@
                     statusDiv.textContent = `Error during crawl: ${event.data || 'Unknown server error'}`;
                     console.error("Received non-JSON error event:", event.data);
                 }
-                progressBar.style.display = 'none'; // Hide progress on error
+                startButton.textContent = 'Start Check';
                 startButton.disabled = false;
+                isCrawling = false;
                 if (eventSource) eventSource.close();
                 console.log("EventSource closed due to server error.");
             });
