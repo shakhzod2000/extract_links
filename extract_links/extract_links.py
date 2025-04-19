@@ -117,7 +117,7 @@ def stream_links(start_url, max_depth=3, delay=1):
 
         time.sleep(delay) # Delay to avoid overwhelming server
     end_data = json.dumps({'status': 'finished', 'count': len(visited)})
-    yield f"event: end\ndata: {end_data}.\n\n"
+    yield f"event: end\ndata: {end_data}\n\n"
 
 
 # Flask routes
@@ -137,15 +137,27 @@ def display_links():
     # Basic validation
     if not start_url:
         error_data = json.dumps({'url': '', 'status': 'Error: No URL provided.'})
-        return Response("event: error\ndata: {\"status\": \"Error: No URL provided.\"}\n\n", mimetype='text/event-stream')
+        return Response(f"event: error\ndata: {error_data}\n\n", mimetype='text/event-stream')
     
     # Ensure scheme(https)
     parsed = urlparse(start_url)
+    print(f"parsed URL: {parsed}")
     if not parsed.scheme:
-        # Assume https if no scheme provided
-        start_url = urlunparse(('https', parsed.netloc, parsed.path, parsed.params, parsed.query, parsed.fragment))
-        print(f"Prepended https scheme: {start_url}")
+        # If no scheme(http(s)) AND no netloc, but path looks like domain
+        if not parsed.netloc and parsed.path:
+            # Treat path as domain, prepend(https)
+            start_url = urlunparse(('https', parsed.path, '', '', '', ''))
+            print(f"Assuming domain, prepended https: {start_url}")
+        else:
+            start_url = urlunparse(('https', parsed.netloc, parsed.path, parsed.params, parsed.query, parsed.fragment))
+            print(f"Prepended https scheme: {start_url}")
 
+    # Check if prepended URL is valid parseable now
+    final_parsed = urlparse(start_url)
+    if not final_parsed.netloc:
+        error_data = json.dumps({'url': start_url, 'status': 'Error: Could not determine valid domain.'})
+        return Response(f"event: error\ndata, {error_data}\n\n", mimetype='text/event-stream')
+    
     return Response(stream_links(start_url, max_depth=3, delay=0.3), mimetype='text/event-stream')
 
 if __name__ == '__main__':
