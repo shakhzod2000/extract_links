@@ -25,6 +25,7 @@ A web-based application built with Flask and JavaScript that crawls a given URL,
 ├── templates/
 │   └── index.html       # Main frontend interface (HTML + CSS + JavaScript)
 └── README.md            # You're here!
+```
 
 🛠️ Technologies Used
 Frontend: HTML5, CSS3, Vanilla JavaScript
