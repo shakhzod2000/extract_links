@@ -80,7 +80,7 @@ Then open your browser at: `http://127.0.0.1:5000`
 
 ---
 
-## 📸 Screenshots
+## 📸 Demo
 ![extract_links](https://github.com/user-attachments/assets/5f17b936-3fd1-4038-882d-5f197b4eb6ea)
 
 https://github.com/user-attachments/assets/f8ac6851-0306-43e8-a1f6-82cf7109150b
