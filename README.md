@@ -74,9 +74,9 @@ pip install flask requests beautifulsoup4
 
 ## ▶️ Run the App
 ```bash
-python app.py
+python extract_links.py
 ```
-Then open your browser at: `http://localhost:5000`
+Then open your browser at: `http://127.0.0.1:5000`
 
 ---
 
