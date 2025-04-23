@@ -83,7 +83,7 @@ Then open your browser at: `http://localhost:5000`
 ## 📸 Screenshots
 ![image](https://github.com/user-attachments/assets/0be870a6-548a-43d5-add3-7f42d4e4070a)
 
-https://github.com/user-attachments/assets/365bc56c-d5f2-4fb9-9597-a4979060bef1
+https://github.com/user-attachments/assets/cf28a51e-fabd-4787-9e75-26b4af76b4b2
 
 ---
 
