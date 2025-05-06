@@ -55,8 +55,10 @@
         const startButton = document.getElementById('start-button');
         const linkList = document.getElementById('link-list');
         const progressBar = document.getElementById('progress');
+        const progressBarMax = progressBar.max;
         const statusDiv = document.getElementById('status');
         const seenLinks = new Set();
+        let finalPercentage = 0;
 
         let eventSource = null; // Keep track of the current EventSource connection
         let isCrawling = false;
@@ -64,13 +66,14 @@
         form.addEventListener('submit', function(event) {
             event.preventDefault(); // Prevent default form submission
 
-            if (isCrawling) {
+            if (isCrawling) { // if still crawling after Stop
                 console.log('Stop button clicked');
                 if (eventSource) {
                     eventSource.close() // Close the connection
                     console.log('EventSource connection was closed by user');
                 }
-                statusDiv.textContent = 'Crawl stopped by user';
+                finalPercentage = Math.min(100, Math.round((seenLinks.size / progressBarMax) * 100));
+                statusDiv.textContent = `Crawl stopped by user. Found ${seenLinks.size} unique links (~${finalPercentage}% of estimate).`;
                 isCrawling = false;
                 startButton.textContent = 'Start Check';
                 startButton.disabled = false;
@@ -111,8 +114,6 @@
         });
 
         function setupEventSourceListeners() {
-            const progressBarMax = progressBar.max;
-
             eventSource.onopen = function() {
                 console.log("Connection to stream opened.");
                 if (!isCrawling) return;
@@ -184,7 +185,7 @@
                 try {
                     const endData = JSON.parse(event.data);
                     progressBar.value = progressBar.max; // Ensure it shows 100% if max was reached/exceeded
-                    let finalPercentage = Math.min(100, Math.round((seenLinks.size / progressBarMax) * 100));
+                    finalPercentage = Math.min(100, Math.round((seenLinks.size / progressBarMax) * 100));
                     statusDiv.textContent = `✅ Crawling finished. Found ${seenLinks.size} unique links (~${finalPercentage}% of estimate).`;
                     startButton.textContent = 'Start Check';
                     startButton.disabled = false;
